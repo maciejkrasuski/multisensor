@@ -9,4 +9,4 @@ Simple and easy to build multisensor on ESPHOME which measure:
 - pm 4
 - pm 10
 
-More info you can find here: 
+More info you can find here: https://www.youtube.com/watch?v=0i9RCeo03S0
