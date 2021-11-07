@@ -328,7 +328,7 @@ PSU
 Text Notes 3100 825  0    118  ~ 24
 Temp/Press/Humi
 Text Notes 5475 825  0    118  ~ 24
-Illuminance
+Luminance
 Text Notes 7625 825  0    118  ~ 24
 Air Quality
 Text Notes 9850 825  0    118  ~ 24

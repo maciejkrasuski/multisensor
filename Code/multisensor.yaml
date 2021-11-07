@@ -1,0 +1,250 @@
+esphome:
+  name: esp_airsensor_outdoor
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+ 
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "ESP Airsensor-Outdoor"
+    password: !secret wifi_pass
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+  
+web_server:
+  port: 80
+  
+i2c:
+  sda: GPIO4 
+  scl: GPIO5
+  scan: True
+  id: bus_a
+  
+binary_sensor:
+  - platform: status
+    name: "ESP AirSensor-Outdoor Status"
+    id: esp_status
+    
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "ESP AirSensor-Outdoor IP Address"
+      id: esp_ip
+    ssid:
+      name: "ESP AirSensor-Outdoor WIFI SSID"
+      id: esp_ssid
+    mac_address:
+      name: "ESP AirSensor-Outdoor MAC Address"
+      id: esp_mac
+      
+      
+sensor:
+  - platform: adc
+    pin: VCC
+    name: "ESP AirSensor-Outdoor Voltage"
+    
+  - platform: bme280
+    temperature:
+      name: "ESP AirSensor-Outdoor Temperature"
+      id: bme280_temperature
+      oversampling: 16x
+    pressure:
+      name: "ESP AirSensor-Outdoor Pressure"
+      id: bme280_pressure
+    humidity:
+      name: "ESP AirSensor-Outdoor Humidity"
+      id: bme280_humidity
+    address: 0x76
+    update_interval: 60s
+    
+    
+  - platform: bh1750
+    name: "ESP AirSensor-Outdoor Illuminance"
+    id: bh1750_illuminance
+    address: 0x23
+    measurement_duration: 69
+    update_interval: 10s
+    
+    
+  - platform: sps30
+    pm_1_0:
+      name: "ESP AirSensor-Outdoor PM <1µm Weight concentration"
+      id: "PM_1_0"
+    pm_2_5:
+      name: "ESP AirSensor-Outdoor PM <2.5µm Weight concentration"
+      id: "PM_2_5"
+    pm_4_0:
+      name: "ESP AirSensor-Outdoor PM <4µm Weight concentration"
+      id: "PM_4_0"
+    pm_10_0:
+      name: "ESP AirSensor-Outdoor PM <10µm Weight concentration"
+      id: "PM_10_0"
+    pmc_0_5:
+      name: "ESP AirSensor-Outdoor PM <0.5µm Number concentration"
+      id: "PMC_0_5"
+    pmc_1_0:
+      name: "ESP AirSensor-Outdoor PM <1µm Number concentration"
+      id: "PMC_1_0"
+    pmc_2_5:
+      name: "ESP AirSensor-Outdoor PM <2.5µm Number concentration"
+      id: "PMC_2_5"
+    pmc_4_0:
+      name: "ESP AirSensor-Outdoor PM <4µm Number concentration"
+      id: "PMC_4_0"
+    pmc_10_0:
+      name: "ESP AirSensor-Outdoor PM <10µm Number concentration"
+      id: "PMC_10_0"
+    address: 0x69
+    update_interval: 10s    
+
+
+display:
+  - platform: ssd1306_i2c
+    id: oled_display
+    model: "SH1106 128x64"
+    address: 0x3C
+    contrast: 0.5
+    
+
+    pages:
+      - id: page1
+        lambda: |-
+          it.rectangle(0, 0, 126, 15);
+          it.printf(64,12, id(font1), TextAlign::BASELINE_CENTER, "Air Quality");
+          it.printf(1, 27, id(font1), TextAlign::BASELINE_LEFT, "PM 1:");
+          it.printf(125, 27, id(font1), TextAlign::BASELINE_RIGHT, "%.2f ug/m3", id(PM_1_0).state);
+          it.printf(1, 39, id(font1), TextAlign::BASELINE_LEFT, "PM 2.5:");
+          it.printf(125, 39, id(font1), TextAlign::BASELINE_RIGHT, "%.2f ug/m3", id(PM_2_5).state);
+          it.printf(1, 51, id(font1), TextAlign::BASELINE_LEFT, "PM 4:");
+          it.printf(125, 51, id(font1), TextAlign::BASELINE_RIGHT, "%.2f ug/m3", id(PM_4_0).state);
+          it.printf(1, 63, id(font1), TextAlign::BASELINE_LEFT, "PM 10:");
+          it.printf(125, 63, id(font1), TextAlign::BASELINE_RIGHT, "%.2f ug/m3", id(PM_10_0).state);
+      - id: page2
+        lambda: |-
+          it.rectangle(0, 0, 126, 15);
+          it.printf(64,12, id(font1), TextAlign::BASELINE_CENTER, "Environment");
+          it.printf(1, 27, id(font1), TextAlign::BASELINE_LEFT, "Temperature:");
+          it.printf(125, 27, id(font1), TextAlign::BASELINE_RIGHT, "%.2f", id(bme280_temperature).state);
+          it.printf(1, 39, id(font1), TextAlign::BASELINE_LEFT, "Pressure:");
+          it.printf(125, 39, id(font1), TextAlign::BASELINE_RIGHT, "%.2f", id(bme280_pressure).state);
+          it.printf(1, 51, id(font1), TextAlign::BASELINE_LEFT, "Humidity:");
+          it.printf(125, 51, id(font1), TextAlign::BASELINE_RIGHT, "%.2f", id(bme280_humidity).state);
+          it.printf(1, 63, id(font1), TextAlign::BASELINE_LEFT, "Illuminance:");
+          it.printf(125, 63, id(font1), TextAlign::BASELINE_RIGHT, "%.2f", id(bh1750_illuminance).state);
+      - id: page3
+        lambda: |-
+          it.rectangle(0, 0, 126, 15);
+          it.printf(64,12, id(font1), TextAlign::BASELINE_CENTER, "Network");
+          it.printf(1, 27, id(font1), TextAlign::BASELINE_LEFT, "SSID:");
+          it.printf(125, 27, id(font1), TextAlign::BASELINE_RIGHT, "%s", id(esp_ssid).state.c_str());
+          it.printf(1, 39, id(font1), TextAlign::BASELINE_LEFT, "IP");
+          it.printf(125, 39, id(font1), TextAlign::BASELINE_RIGHT, "%s", id(esp_ip).state.c_str());
+          it.printf(1, 51, id(font1), TextAlign::BASELINE_LEFT, "Mac:");
+          it.printf(125, 51, id(font1), TextAlign::BASELINE_RIGHT, "%s", id(esp_mac).state.c_str());
+
+interval:
+  - interval: 5s
+    then:
+      - display.page.show_next: oled_display
+      - component.update: oled_display   
+    
+    
+    
+    
+
+font:
+  - file: 'arial.ttf'
+    id: font1
+    size: 11
+    glyphs:
+    - ' '
+    - '/'
+    - '!'
+    - '"'
+    - '%'
+    - (
+    - )
+    - +
+    - ','
+    - '-'
+    - .
+    - '0'
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5'
+    - '6'
+    - '7'
+    - '8'
+    - '9'
+    - ':'
+    - A
+    - B
+    - C
+    - D
+    - E
+    - F
+    - G
+    - H
+    - I
+    - J
+    - K
+    - L
+    - M
+    - N
+    - O
+    - P
+    - Q
+    - R
+    - S
+    - T
+    - U
+    - V
+    - W
+    - X
+    - Y
+    - Z
+    - _
+    - a
+    - b
+    - c
+    - d
+    - e
+    - f
+    - g
+    - h
+    - i
+    - j
+    - k
+    - l
+    - m
+    - n
+    - o
+    - p
+    - q
+    - r
+    - s
+    - t
+    - u
+    - v
+    - w
+    - x
+    - y
+    - z
+    - °
